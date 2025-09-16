@@ -230,10 +230,20 @@ const App: React.FC = () => {
         return strCell;
     };
 
+    const formatDateForCSV = (dateString: string) => {
+        // dateString is 'YYYY-MM-DD'. Appending time to handle timezones correctly.
+        const date = new Date(dateString + 'T00:00:00');
+        // Format to MM/DD/YYYY which is widely supported by spreadsheet software.
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${month}/${day}/${year}`;
+    };
+
     const csvRows = [
       headers.join(','),
       ...filteredTransactions.map(t => [
-        escapeCsvCell(t.date),
+        escapeCsvCell(formatDateForCSV(t.date)),
         escapeCsvCell(t.description),
         escapeCsvCell(t.amount.toFixed(2)),
         escapeCsvCell(t.category),
