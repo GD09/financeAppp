@@ -29,14 +29,6 @@ const App: React.FC = () => {
   const { budgets, addBudget, deleteBudget } = useBudgets();
   const { notifications, addNotification, markAllAsRead, clearNotifications } = useNotifications();
 
-  const [isFormVisible, setIsFormVisible] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [currency, setCurrency] = useState('USD');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Filters>({ type: 'all', category: 'all' });
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'date', direction: 'desc' });
-
-
   // In a real application, these rates would be fetched from a currency API
   const exchangeRates: { [key:string]: number } = {
     'USD': 1,
@@ -47,6 +39,36 @@ const App: React.FC = () => {
     'AUD': 1.50,
     'INR': 83.50,
   };
+
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [currency, setCurrency] = useState(() => {
+    const currencyMap: { [key: string]: string } = {
+        'US': 'USD', 'GB': 'GBP', 'JP': 'JPY', 'CA': 'CAD', 'AU': 'AUD', 'IN': 'INR',
+        // Eurozone countries
+        'AT': 'EUR', 'BE': 'EUR', 'CY': 'EUR', 'EE': 'EUR', 'FI': 'EUR', 'FR': 'EUR', 
+        'DE': 'EUR', 'GR': 'EUR', 'IE': 'EUR', 'IT': 'EUR', 'LV': 'EUR', 'LT': 'EUR', 
+        'LU': 'EUR', 'MT': 'EUR', 'NL': 'EUR', 'PT': 'EUR', 'SK': 'EUR', 'SI': 'EUR', 'ES': 'EUR',
+    };
+
+    try {
+        const locale = navigator.language || 'en-US';
+        const countryCode = locale.slice(-2).toUpperCase();
+        const detectedCurrency = currencyMap[countryCode];
+        
+        // Check if the detected currency is one we support (i.e., have an exchange rate for).
+        if (detectedCurrency && exchangeRates[detectedCurrency]) {
+             return detectedCurrency;
+        }
+    } catch (e) {
+        console.warn("Could not determine user locale for currency, defaulting to USD.", e);
+    }
+    
+    return 'USD'; // Fallback currency
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<Filters>({ type: 'all', category: 'all' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'date', direction: 'desc' });
 
   const formatCurrency = useCallback((amount: number) => {
     const rate = exchangeRates[currency] || 1;
